@@ -79,6 +79,7 @@
               <h5 class="mb-3">IOS提审</h5>
               <button id="ios-prepare-btn" class="btn btn-primary me-2">准备审核</button>
               <button id="ios-finished-btn" class="btn btn-success">审核完成</button>
+              <span id="ios-status" class="ms-3"></span>
             </div>
           </div>
         </div>
@@ -236,8 +237,12 @@
       $("#ios-prepare-btn").on("click", async function () {
         const cfg = window.__CONFIG__ || {};
         const url = (cfg.API_URL || "") + "/supabase/version-up";
-        if (!accessToken) {
-          alert("请先登录");
+        const $status = $("#ios-status");
+        $status.removeClass("text-success text-danger").text("");
+        const { data: sessData } = await supabaseClient.auth.getSession();
+        const token = sessData?.session?.access_token || accessToken;
+        if (!token) {
+          $status.addClass("text-danger").text("请先登录");
           return;
         }
         const btn = $(this);
@@ -246,24 +251,27 @@
           const resp = await fetch(url, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${token}`,
             },
           });
           const ct = resp.headers.get("content-type") || "";
-          if (!resp.ok) {
-            const t = await resp.text();
-            alert(t || "请求失败");
-            return;
-          }
           if (ct.includes("application/json")) {
             const j = await resp.json();
-            alert(typeof j === "string" ? j : JSON.stringify(j));
+            if (j && j.success) {
+              $status.addClass("text-success").text(j.data || "操作成功");
+            } else {
+              $status.addClass("text-danger").text((j && j.message) || "请求失败");
+            }
           } else {
             const t = await resp.text();
-            alert(t);
+            if (resp.ok) {
+              $status.addClass("text-success").text(t || "操作成功");
+            } else {
+              $status.addClass("text-danger").text(t || "请求失败");
+            }
           }
         } catch (e) {
-          alert("网络错误");
+          $status.addClass("text-danger").text("网络错误");
         } finally {
           btn.prop("disabled", false);
         }
@@ -272,8 +280,12 @@
       $("#ios-finished-btn").on("click", async function () {
         const cfg = window.__CONFIG__ || {};
         const url = (cfg.API_URL || "") + "/supabase/version-down";
-        if (!accessToken) {
-          alert("请先登录");
+        const $status = $("#ios-status");
+        $status.removeClass("text-success text-danger").text("");
+        const { data: sessData } = await supabaseClient.auth.getSession();
+        const token = sessData?.session?.access_token || accessToken;
+        if (!token) {
+          $status.addClass("text-danger").text("请先登录");
           return;
         }
         const btn = $(this);
@@ -282,24 +294,27 @@
           const resp = await fetch(url, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${token}`,
             },
           });
           const ct = resp.headers.get("content-type") || "";
-          if (!resp.ok) {
-            const t = await resp.text();
-            alert(t || "请求失败");
-            return;
-          }
           if (ct.includes("application/json")) {
             const j = await resp.json();
-            alert(typeof j === "string" ? j : JSON.stringify(j));
+            if (j && j.success) {
+              $status.addClass("text-success").text(j.data || "操作成功");
+            } else {
+              $status.addClass("text-danger").text((j && j.message) || "请求失败");
+            }
           } else {
             const t = await resp.text();
-            alert(t);
+            if (resp.ok) {
+              $status.addClass("text-success").text(t || "操作成功");
+            } else {
+              $status.addClass("text-danger").text(t || "请求失败");
+            }
           }
         } catch (e) {
-          alert("网络错误");
+          $status.addClass("text-danger").text("网络错误");
         } finally {
           btn.prop("disabled", false);
         }
