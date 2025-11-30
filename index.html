@@ -100,8 +100,8 @@
       supabaseClient = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
     }
 
-    $(function () {
-      initSupabase();
+      $(function () {
+        initSupabase();
 
       (async function restore() {
         const { data } = await supabaseClient.auth.getSession();
@@ -230,6 +230,78 @@
           $("#header-welcome-name").text(display || email);
           $("#header-welcome").removeClass("d-none");
           $("#settings-status").addClass("text-success").text("保存成功");
+        }
+      });
+
+      $("#ios-prepare-btn").on("click", async function () {
+        const cfg = window.__CONFIG__ || {};
+        const url = (cfg.API_URL || "") + "/supabase/version-up";
+        if (!accessToken) {
+          alert("请先登录");
+          return;
+        }
+        const btn = $(this);
+        btn.prop("disabled", true);
+        try {
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          const ct = resp.headers.get("content-type") || "";
+          if (!resp.ok) {
+            const t = await resp.text();
+            alert(t || "请求失败");
+            return;
+          }
+          if (ct.includes("application/json")) {
+            const j = await resp.json();
+            alert(typeof j === "string" ? j : JSON.stringify(j));
+          } else {
+            const t = await resp.text();
+            alert(t);
+          }
+        } catch (e) {
+          alert("网络错误");
+        } finally {
+          btn.prop("disabled", false);
+        }
+      });
+
+      $("#ios-finished-btn").on("click", async function () {
+        const cfg = window.__CONFIG__ || {};
+        const url = (cfg.API_URL || "") + "/supabase/version-down";
+        if (!accessToken) {
+          alert("请先登录");
+          return;
+        }
+        const btn = $(this);
+        btn.prop("disabled", true);
+        try {
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          const ct = resp.headers.get("content-type") || "";
+          if (!resp.ok) {
+            const t = await resp.text();
+            alert(t || "请求失败");
+            return;
+          }
+          if (ct.includes("application/json")) {
+            const j = await resp.json();
+            alert(typeof j === "string" ? j : JSON.stringify(j));
+          } else {
+            const t = await resp.text();
+            alert(t);
+          }
+        } catch (e) {
+          alert("网络错误");
+        } finally {
+          btn.prop("disabled", false);
         }
       });
     });
